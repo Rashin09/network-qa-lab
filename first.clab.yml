@@ -1,0 +1,11 @@
+name: first
+topology:
+  nodes:
+    n1:
+      kind: linux
+      image: ghcr.io/srl-labs/network-multitool
+    n2:
+      kind: linux
+      image: ghcr.io/srl-labs/network-multitool
+  links:
+    - endpoints: ["n1:eth1", "n2:eth1"]
