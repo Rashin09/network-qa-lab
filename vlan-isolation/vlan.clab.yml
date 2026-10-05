@@ -1,0 +1,43 @@
+name: vlan
+topology:
+  nodes:
+    sw1:                      # the switch
+      kind: linux
+      image: ghcr.io/srl-labs/network-multitool
+      exec:
+        - ip link add br0 type bridge vlan_filtering 1
+        - ip link set eth1 master br0
+        - ip link set eth2 master br0
+        - ip link set eth3 master br0
+        - bridge vlan del dev eth1 vid 1
+        - bridge vlan del dev eth2 vid 1
+        - bridge vlan del dev eth3 vid 1
+        - bridge vlan add dev eth1 vid 10 pvid untagged   # port to sales1
+        - bridge vlan add dev eth2 vid 20 pvid untagged   # port to eng1
+        - bridge vlan add dev eth3 vid 10 pvid untagged   # port to sales2
+        - ip link set eth1 up
+        - ip link set eth2 up
+        - ip link set eth3 up
+        - ip link set br0 up
+    sales1:                   # VLAN 10
+      kind: linux
+      image: ghcr.io/srl-labs/network-multitool
+      exec:
+        - ip addr add 10.0.0.1/24 dev eth1
+        - ip link set eth1 up
+    eng1:                     # VLAN 20
+      kind: linux
+      image: ghcr.io/srl-labs/network-multitool
+      exec:
+        - ip addr add 10.0.0.2/24 dev eth1
+        - ip link set eth1 up
+    sales2:                   # VLAN 10
+      kind: linux
+      image: ghcr.io/srl-labs/network-multitool
+      exec:
+        - ip addr add 10.0.0.3/24 dev eth1
+        - ip link set eth1 up
+  links:
+    - endpoints: ["sw1:eth1", "sales1:eth1"]
+    - endpoints: ["sw1:eth2", "eng1:eth1"]
+    - endpoints: ["sw1:eth3", "sales2:eth1"]
