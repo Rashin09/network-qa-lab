@@ -1,4 +1,18 @@
 import subprocess
+import pytest
+from pathlib import Path
+LAB_FILE = str(Path(__file__).resolve().parent / "vlan.clab.yml")
+
+@pytest.fixture(autouse=True,scope="module")
+def start_stop():
+    containter_deploy_command=["sudo","containerlab","deploy","-t",LAB_FILE]           
+    result=subprocess.run(containter_deploy_command,capture_output=True, text=True)
+    if result.returncode !=0:
+         pytest.fail(f"Lab Deployement Failed: {result.stderr} {result.stdout}")
+    yield result
+    containter_destroy_command=["sudo","containerlab","destroy","-t",LAB_FILE]
+    result=subprocess.run(containter_destroy_command,capture_output=True, text=True)
+
 
 def run(node, command):
     container=(f"clab-vlan-{node}")
@@ -29,7 +43,7 @@ def parse_vlans(vlan_string):
             vlan_mapping[port]=int(vlan_id)
 
     return vlan_mapping
-parse_vlans(get_switch_vlan_text())
+
 
 def test_switch_ports_are_in_expected_vlans():
     expected_vlans={'eth1': 10, 'eth2': 20, 'eth3': 10}
