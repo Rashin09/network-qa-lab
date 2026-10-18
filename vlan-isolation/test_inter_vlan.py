@@ -37,7 +37,18 @@ def test_inter_vlan_route():
         assert result2.returncode != 0
     finally:    
         enable_vlan_routing=run("router", "sysctl -w net.ipv4.ip_forward=1")
-        assert enable_vlan_routing.returncode ==0 , disable_vlan_routing.stderr
+        assert enable_vlan_routing.returncode ==0 , enable_vlan_routing.stderr
+
+def test_remove_route():
+    try:
+        remove_route_command=run("eng1","ip route del 192.168.10.0/24 via 192.168.20.1 dev eth1")
+        assert remove_route_command.returncode ==0, remove_route_command.stderr
+        ping_command=run("sales1","ping -c 2 -W 2 192.168.20.10")
+        assert ping_command.returncode !=0, ping_command.stderr
+
+    finally: 
+        add_route_command=run("eng1","ip route add 192.168.10.0/24 via 192.168.20.1 dev eth1")
+        assert add_route_command.returncode ==0, add_route_command.stderr
 
 
 
