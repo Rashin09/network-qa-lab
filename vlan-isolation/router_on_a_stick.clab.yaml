@@ -1,0 +1,96 @@
+name: router-on-a-stick
+
+topology:
+  nodes:
+    sw1:
+      kind: linux
+      image: ghcr.io/srl-labs/network-multitool
+      exec:
+        - ip link add br0 type bridge vlan_filtering 1
+
+        - ip link set eth1 master br0
+        - ip link set eth2 master br0
+        - ip link set eth3 master br0
+
+        - bridge vlan del dev eth1 vid 1
+        - bridge vlan del dev eth2 vid 1
+        - bridge vlan del dev eth3 vid 1
+
+        # Sales PC: access VLAN 10
+        - bridge vlan add dev eth1 vid 10 pvid untagged
+
+        # Trunk to sw2
+        - bridge vlan add dev eth2 vid 10
+        - bridge vlan add dev eth2 vid 20
+
+        # Trunk to router
+        - bridge vlan add dev eth3 vid 10
+        - bridge vlan add dev eth3 vid 20
+
+        - ip link set eth1 up
+        - ip link set eth2 up
+        - ip link set eth3 up
+        - ip link set br0 up
+
+    sw2:
+      kind: linux
+      image: ghcr.io/srl-labs/network-multitool
+      exec:
+        - ip link add br0 type bridge vlan_filtering 1
+
+        - ip link set eth1 master br0
+        - ip link set eth2 master br0
+
+        - bridge vlan del dev eth1 vid 1
+        - bridge vlan del dev eth2 vid 1
+
+        # Trunk to sw1
+        - bridge vlan add dev eth1 vid 10
+        - bridge vlan add dev eth1 vid 20
+
+        # Engineering PC: access VLAN 20
+        - bridge vlan add dev eth2 vid 20 pvid untagged
+
+        - ip link set eth1 up
+        - ip link set eth2 up
+        - ip link set br0 up
+
+    router:
+      kind: linux
+      image: ghcr.io/srl-labs/network-multitool
+      exec:
+        - ip link set eth1 up
+
+        # Create VLAN subinterfaces on the trunk interface
+        - ip link add link eth1 name eth1.10 type vlan id 10
+        - ip link add link eth1 name eth1.20 type vlan id 20
+
+        - ip addr add 192.168.10.1/24 dev eth1.10
+        - ip addr add 192.168.20.1/24 dev eth1.20
+
+        - ip link set eth1.10 up
+        - ip link set eth1.20 up
+
+        - sysctl -w net.ipv4.ip_forward=1
+
+    sales1:
+      kind: linux
+      image: ghcr.io/srl-labs/network-multitool
+      exec:
+        - ip addr add 192.168.10.10/24 dev eth1
+        - ip link set eth1 up
+        - ip route add 192.168.20.0/24 via 192.168.10.1 dev eth1
+
+    eng1:
+      kind: linux
+      image: ghcr.io/srl-labs/network-multitool
+      exec:
+        - ip addr add 192.168.20.10/24 dev eth1
+        - ip link set eth1 up
+        - ip route add 192.168.10.0/24 via 192.168.20.1 dev eth1
+
+  links:
+    - endpoints: ["sw1:eth1", "sales1:eth1"]
+    - endpoints: ["sw1:eth2", "sw2:eth1"]
+    - endpoints: ["sw1:eth3", "router:eth1"]
+    - endpoints: ["sw2:eth2", "eng1:eth1"]
