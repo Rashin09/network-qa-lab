@@ -1,0 +1,4 @@
+icmp     1 29 src=192.18.1.4 dst=172.16.13.1 type=8 code=0 id=3 packets=11 bytes=924 src=172.16.13.1 dst=172.16.13.2 type=0 code=0 id=3 packets=11 bytes=924 mark=2617819394 use=1
+icmp     1 0 src=192.18.1.4 dst=172.16.13.1 type=8 code=0 id=2 packets=8 bytes=672 src=172.16.13.1 dst=172.16.13.2 type=0 code=0 id=2 packets=8 bytes=672 mark=2617819394 use=1
+icmp     1 29 src=172.16.13.2 dst=8.8.8.8 type=8 code=0 id=15627 packets=6053 bytes=278438 src=8.8.8.8 dst=172.16.13.2 type=0 code=0 id=15627 packets=6051 bytes=278346 mark=256 use=1
+conntrack v1.4.7 (conntrack-tools): 3 flow entries have been shown.
